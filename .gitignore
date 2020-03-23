@@ -1,0 +1,6 @@
+*~
+venv3
+*openrc.sh
+.python-version
+*.egg-info
+__pycache__

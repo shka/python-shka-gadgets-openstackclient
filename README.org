@@ -1,0 +1,88 @@
+#+AUTHOR: Shintaro Katayama
+#+EMAIL: shintaro.katayama(at)gmail.com
+
+* python-shka-gadgets-openstackclient
+
+This is a plugin of OpenStackClient (a.k.a. OSC) to make a single and
+simple virtual machine handy. In a typical use-case, the virtual
+machine (names "vanilla" here) given a floating IP address is created
+and used interactively. Sometimes the vanilla would be shelved; the
+floating IP address and the security rules are taken away when it is
+shelved, and these are given again when it is unshelved. After the
+interactive tasks, the given resources and the images would be cleaned
+out. The "vanilla" plugin simplifies such resource management in the
+project work.
+
+* Getting Started
+
+This plugin can be installed from PyPI using pip. It will install also
+a minimal OSC (=python-openstackclient) for the "vanilla" server
+management.
+
+* Example
+
+#+begin_src shell :exec never
+  python3 -m venv venv3
+  . ./venv3/bin/activate
+  pip3 install python-shka-gadgets-openstackclient
+  . ./openrc.sh
+#+end_src
+
+The =openrc.sh= here is a script for OSC environment, which you can
+download from the OpenStack dashboard of your project. The script will
+ask a password of the project.
+
+#+begin_src shell :exec never
+  openstack vanilla create --flavor standard.tiny --key-name mykey --image Ubuntu-18.04 test
+#+end_src
+
+It creates a vanilla server named =test= on =standard.tiny= flavor from
+the Ubuntu 18.04 image. The specified key pair must be registered
+already. It gives a floating IP address to the vanilla and prepares a
+security group to login via ssh.
+
+#+begin_src shell :exec never
+  openstack server ssh --login ubuntu test
+#+end_src
+
+You can login to =test= as avobe if the login name is =ubuntu=.
+
+#+begin_src shell :exec never
+  mkdir -p ~/mnt/ubuntu
+  sshfs ubuntu@`openstack vanilla show ip test`: ~/mnt/ubuntu
+  ls -l ~/mnt/ubuntu
+  umount ~/mnt/ubuntu
+#+end_src
+
+You can mount =ubuntu='s home directory of =test= by sshfs, if you prefer.
+
+#+begin_src shell :exec never
+  openstack vanilla shelve test
+#+end_src
+
+It shelves =test= - It's good when you will leave the project
+temporarily. The floating IP address and the security group is taken
+away. The old image used for the previous unshelve is removed.
+
+#+begin_src shell :exec never
+  openstack vanilla unshelve test
+#+end_src
+
+You can unshelve =test= when you restart the project. The floating IP
+address and the security group are configured again.
+
+#+begin_src shell :exec never
+  openstack vanilla resize --flavor standard.xxlarge test
+#+end_src
+
+You can resize =test= when you need more power, if the project supports it.
+
+#+begin_src shell :exec never
+  openstack vanilla delete test
+#+end_src
+
+After the project you can remove =test= completely.
+
+* Copyright
+
+See ./LICENSE
