@@ -4,3 +4,4 @@ venv3
 .python-version
 *.egg-info
 __pycache__
+dist

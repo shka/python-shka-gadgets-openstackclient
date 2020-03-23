@@ -1,5 +1,6 @@
 #+AUTHOR: Shintaro Katayama
 #+EMAIL: shintaro.katayama(at)gmail.com
+#+OPTIONS: num:nil
 
 * python-shka-gadgets-openstackclient
 

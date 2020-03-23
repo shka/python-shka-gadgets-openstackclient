@@ -4,8 +4,8 @@
 
 
 
-1 python-shka-gadgets-openstackclient
--------------------------------------
+python-shka-gadgets-openstackclient
+-----------------------------------
 
 This is a plugin of OpenStackClient (a.k.a. OSC) to make a single and
 simple virtual machine handy. In a typical use-case, the virtual
@@ -17,15 +17,15 @@ interactive tasks, the given resources and the images would be cleaned
 out. The "vanilla" plugin simplifies such resource management in the
 project work.
 
-2 Getting Started
------------------
+Getting Started
+---------------
 
 This plugin can be installed from PyPI using pip. It will install also
 a minimal OSC (=python-openstackclient) for the "vanilla" server
 management.
 
-3 Example
----------
+Example
+-------
 
 .. code:: shell
 
@@ -89,7 +89,7 @@ You can resize ``test`` when you need more power, if the project supports it.
 
 After the project you can remove ``test`` completely.
 
-4 Copyright
------------
+Copyright
+---------
 
 See ./LICENSE
