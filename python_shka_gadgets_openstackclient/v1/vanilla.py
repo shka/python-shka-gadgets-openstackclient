@@ -34,7 +34,7 @@ class _AddPort(command.Command):
         parser.add_argument(
             '--add-port', metavar='<port>', type=int, action='append',
             dest='ports', default=[22],
-            help='Destination port (allow multiple times, default: [22]).',
+            help='Destination port (allow multiple times, default: [22])',
         )
         return parser
 
@@ -46,6 +46,21 @@ class _Flavor(command.Command):
         parser.add_argument(
             '--flavor', metavar='<flavor>', required=True,
             help='Create with this flavor (name or ID)',
+        )
+        return parser
+
+##
+
+class _Mount(command.Command):
+    def get_parser(self, prog_name):
+        parser = super(_Mount, self).get_parser(prog_name)
+        parser.add_argument(
+            '--login', metavar='<login-name>', required=True,
+            help='Login name for sshfs mount (ssh -l option)',
+        )
+        parser.add_argument(
+            '--mount', metavar='<mount-point>', default='',
+            help='Directory of the vanilla server to mount (default: ~)',
         )
         return parser
 
@@ -104,7 +119,7 @@ class AllowMe(_Vanilla, _AddPort):
 
 ##
 
-class Create(_Vanilla, _Flavor, _AddPort):
+class Create(_Vanilla, _Mount, _Flavor, _AddPort):
     """Create a vanilla server."""
 
     def get_parser(self, prog_name):
@@ -140,6 +155,7 @@ class Create(_Vanilla, _Flavor, _AddPort):
         self.check_calls([
             'openstack vanilla allow me %s %s' % (self.add_port_arguments(parsed_args.ports), server),
             'openstack vanilla give ip %s' % (server),
+            'openstack vanilla mount --login %s --mount %s %s' % (parsed_args.login, parsed_args.mount, server)
         ])
         if volume:
             self.check_call('openstack server add volume %s %s' % (server, volume))
@@ -162,6 +178,7 @@ class Delete(_Vanilla):
         server = parsed_args.server
         volumes = parsed_args.delete_volumes
         server_id = False
+        self.check_call('openstack vanilla unmount %s' % (server))
         if volumes:
             volumes = self.check_output('openstack server show %s --format value --column volumes_attached' % (server)).decode().strip()
         self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '2> /dev/null')
@@ -199,9 +216,23 @@ class GiveIP(_Vanilla):
 
     def take_action(self, parsed_args):
         server = parsed_args.server
-        ip = self.check_output('openstack vanilla show ip %s' % (server)).decode().strip()
-        if re.search('=', ip):
+        if re.search('=', self.check_output('openstack vanilla show ip %s' % (server)).decode().strip()):
             self.check_call('openstack server add floating ip %s `openstack floating ip create public --format value --column floating_ip_address`' % (server))
+        return
+
+##
+
+class Mount(_Vanilla, _Mount):
+    """Mount the root directory of the vanilla server to ./vanilla by sshfs."""
+
+    def take_action(self, parsed_args):
+        server = parsed_args.server
+        while re.search('=', self.check_output('openstack vanilla show ip %s' % (server)).decode().strip()):
+            self.check_call('sleep 4')
+        self.check_calls([
+            'mkdir -p ./vanilla',
+            'sshfs -oStrictHostKeyChecking=accept-new %s@`openstack vanilla show ip %s`:%s ./vanilla' % (parsed_args.login, server, parsed_args.mount)
+        ])
         return
 
 ##
@@ -231,7 +262,8 @@ class Shelve(_Vanilla):
     def take_action(self, parsed_args):
         server = parsed_args.server
         images =  self.check_output('openstack image list --format value --column ID --property instance_uuid=`openstack vanilla show id %s`' % (server)).decode().strip().split()
-        self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '2> /dev/null')
+        self.check_call('openstack vanilla unmount %s' % (server))
+        self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '> /dev/null 2>&1')
         self.check_calls([
             'openstack vanilla take ip %s' % (server),
             'openstack vanilla deny us %s' % (server),
@@ -306,7 +338,18 @@ class Test(_Vanilla):
 
 ##
 
-class Unshelve(_Vanilla, _AddPort):
+class Unmount(_Vanilla):
+    """Unmount the vanilla server."""
+
+    def take_action(self, parsed_args):
+        if re.search(self.check_output('openstack vanilla show ip %s' % (parsed_args.server)).decode().strip(),
+                     self.check_output('mount').decode()):
+            self.check_call('umount ./vanilla')
+        return
+
+##
+
+class Unshelve(_Vanilla, _Mount, _AddPort):
     """Unshelve the vanilla server."""
 
     def take_action(self, parsed_args):
@@ -314,6 +357,7 @@ class Unshelve(_Vanilla, _AddPort):
         self.check_call('openstack server unshelve %s' % (server), '> /dev/null')
         self.check_calls([
             'openstack vanilla allow me %s %s' % (self.add_port_arguments(parsed_args.ports), server),
-            'openstack vanilla give ip %s' % (server)
+            'openstack vanilla give ip %s' % (server),
+            'openstack vanilla mount --login %s --mount %s %s' % (parsed_args.login, parsed_args.mount, server)
         ])
         return

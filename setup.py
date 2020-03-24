@@ -22,7 +22,7 @@ except IOError:
 
 setup(
     name='python-shka-gadgets-openstackclient',
-    version='0.1.0',
+    version='0.2.1',
     url='https://github.com/shka/python-shka-gadgets-openstackclient',
     author='Shintaro Katayama',
     author_email='shintaro.katayama@gmail.com',
@@ -50,6 +50,7 @@ setup(
             'vanilla_delete=python_shka_gadgets_openstackclient.v1.vanilla:Delete',
             'vanilla_deny_us=python_shka_gadgets_openstackclient.v1.vanilla:DenyUs',
             'vanilla_give_ip=python_shka_gadgets_openstackclient.v1.vanilla:GiveIP',
+            'vanilla_mount=python_shka_gadgets_openstackclient.v1.vanilla:Mount',
             'vanilla_resize=python_shka_gadgets_openstackclient.v1.vanilla:Resize',
             'vanilla_shelve=python_shka_gadgets_openstackclient.v1.vanilla:Shelve',
             'vanilla_show_id=python_shka_gadgets_openstackclient.v1.vanilla:ShowID',
@@ -58,6 +59,7 @@ setup(
             'vanilla_show_status=python_shka_gadgets_openstackclient.v1.vanilla:ShowStatus',
             'vanilla_take_ip=python_shka_gadgets_openstackclient.v1.vanilla:TakeIP',
             # 'vanilla_test=python_shka_gadgets_openstackclient.v1.vanilla:Test',
+            'vanilla_unmount=python_shka_gadgets_openstackclient.v1.vanilla:Unmount',
             'vanilla_unshelve=python_shka_gadgets_openstackclient.v1.vanilla:Unshelve',
         ],
     },
