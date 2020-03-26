@@ -105,7 +105,6 @@ option will show them. For example,
       vanilla take ip
       vanilla unmount
       vanilla unshelve
-      vanilla wait sshd
     $ openstack vanilla create --help
     usage: openstack vanilla create [-h] [--add-port <port>] --flavor <flavor>
     				--login <login-name> [--mount <mount-point>]
