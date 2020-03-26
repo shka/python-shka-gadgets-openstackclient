@@ -188,7 +188,7 @@ class Delete(_Vanilla):
         self.check_call('openstack vanilla unmount %s' % (server))
         if volumes:
             volumes = self.check_output('openstack server show %s --format value --column volumes_attached' % (server)).decode().strip()
-        self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '2> /dev/null')
+        self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '> /dev/null 2>&1')
         self.check_calls([
             'openstack vanilla take ip %s' % (server),
             'openstack vanilla deny us %s' % (server),
