@@ -22,7 +22,7 @@ except IOError:
 
 setup(
     name='python-shka-gadgets-openstackclient',
-    version='0.2.2',
+    version='0.3.0',
     url='https://github.com/shka/python-shka-gadgets-openstackclient',
     author='Shintaro Katayama',
     author_email='shintaro.katayama@gmail.com',
@@ -61,6 +61,7 @@ setup(
             # 'vanilla_test=python_shka_gadgets_openstackclient.v1.vanilla:Test',
             'vanilla_unmount=python_shka_gadgets_openstackclient.v1.vanilla:Unmount',
             'vanilla_unshelve=python_shka_gadgets_openstackclient.v1.vanilla:Unshelve',
+            'vanilla_wait_sshd=python_shka_gadgets_openstackclient.v1.vanilla:WaitSShD',
         ],
     },
 )
