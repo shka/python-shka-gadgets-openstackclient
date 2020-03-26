@@ -52,6 +52,13 @@ class _Flavor(command.Command):
 ##
 
 class _Mount(command.Command):
+
+    def mount_argument(self, mount):
+        mount = ''
+        if mount:
+            mount = '--mount %s' % (monut)
+        return mount
+    
     def get_parser(self, prog_name):
         parser = super(_Mount, self).get_parser(prog_name)
         parser.add_argument(
@@ -155,7 +162,7 @@ class Create(_Vanilla, _Mount, _Flavor, _AddPort):
         self.check_calls([
             'openstack vanilla allow me %s %s' % (self.add_port_arguments(parsed_args.ports), server),
             'openstack vanilla give ip %s' % (server),
-            'openstack vanilla mount --login %s --mount %s %s' % (parsed_args.login, parsed_args.mount, server)
+            'openstack vanilla mount --login %s %s %s' % (parsed_args.login, self.mount_argument(parsed_args.mount), server)
         ])
         if volume:
             self.check_call('openstack server add volume %s %s' % (server, volume))
@@ -358,6 +365,6 @@ class Unshelve(_Vanilla, _Mount, _AddPort):
         self.check_calls([
             'openstack vanilla allow me %s %s' % (self.add_port_arguments(parsed_args.ports), server),
             'openstack vanilla give ip %s' % (server),
-            'openstack vanilla mount --login %s --mount %s %s' % (parsed_args.login, parsed_args.mount, server)
+            'openstack vanilla mount --login %s %s %s' % (parsed_args.login, self.mount_argument(parsed_args.mount), server)
         ])
         return
