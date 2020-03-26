@@ -51,7 +51,18 @@ class _Flavor(command.Command):
 
 ##
 
-class _Mount(command.Command):
+class _Login(command.Command):
+    def get_parser(self, prog_name):
+        parser = super(_Login, self).get_parser(prog_name)
+        parser.add_argument(
+            '--login', metavar='<login-name>', required=True,
+            help='Login name for ssh/sshfs',
+        )
+        return parser
+
+##
+
+class _Mount(_Login):
 
     def mount_argument(self, mount):
         mount = ''
@@ -61,10 +72,6 @@ class _Mount(command.Command):
     
     def get_parser(self, prog_name):
         parser = super(_Mount, self).get_parser(prog_name)
-        parser.add_argument(
-            '--login', metavar='<login-name>', required=True,
-            help='Login name for sshfs mount (ssh -l option)',
-        )
         parser.add_argument(
             '--mount', metavar='<mount-point>', default='',
             help='Directory of the vanilla server to mount (default: ~)',
@@ -235,7 +242,7 @@ class Mount(_Vanilla, _Mount):
     def take_action(self, parsed_args):
         server = parsed_args.server
         while re.search('=', self.check_output('openstack vanilla show ip %s' % (server)).decode().strip()):
-            self.check_call('sleep 4')
+            self.check_call('sleep 1')
         self.check_calls([
             'mkdir -p ./vanilla',
             'sshfs -oStrictHostKeyChecking=accept-new %s@`openstack vanilla show ip %s`:%s ./vanilla' % (parsed_args.login, server, parsed_args.mount)
@@ -278,7 +285,7 @@ class Shelve(_Vanilla):
         ])
         if not parsed_args.keep_images:
             while 'SHELVED_OFFLOADED' != self.check_output('openstack vanilla show status %s' % (server)).decode().strip():
-                self.check_call('sleep 4')
+                self.check_call('sleep 1')
             for image in images:
                 self.check_call('openstack image delete %s' % (image))
         return
@@ -367,4 +374,16 @@ class Unshelve(_Vanilla, _Mount, _AddPort):
             'openstack vanilla give ip %s' % (server),
             'openstack vanilla mount --login %s %s %s' % (parsed_args.login, self.mount_argument(parsed_args.mount), server)
         ])
+        return
+
+##
+
+class WaitSShD(_Vanilla, _Login):
+    """Wait sshd in the vanilla server."""
+
+    def take_action(self, parsed_args):
+        try:
+            self.check_call("ssh %s@`openstack vanilla show ip %s` 'echo OK' 2>/dev/null" % (parsed_args.login, parsed_args.server))
+        except:
+            print('NG')
         return
