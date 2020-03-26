@@ -20,9 +20,9 @@ project work.
 Getting Started
 ---------------
 
-This plugin can be installed from PyPI using pip. It will install also
-a minimal OSC (=python-openstackclient) for the "vanilla" server
-management.
+``sshfs`` and ``curl`` are prerequisites, and this plugin can be installed
+from PyPI using pip. It will install also a minimal OSC
+(=python-openstackclient) for the "vanilla" server management.
 
 Example
 -------
@@ -40,12 +40,13 @@ ask a password of the project.
 
 .. code:: shell
 
-    openstack vanilla create --flavor standard.tiny --key-name mykey --image Ubuntu-18.04 test
+    openstack vanilla create --flavor standard.tiny --key-name mykey --image Ubuntu-18.04 --login ubuntu test
 
 It creates a vanilla server named ``test`` on ``standard.tiny`` flavor from
 the Ubuntu 18.04 image. The specified key pair must be registered
 already. It gives a floating IP address to the vanilla and prepares a
-security group to login via ssh.
+security group to login via ssh. And, in this case, the home directory
+of user ``ubuntu`` is accessible from ``./vanilla`` via sshfs.
 
 .. code:: shell
 
@@ -55,27 +56,20 @@ You can login to ``test`` as avobe if the login name is ``ubuntu``.
 
 .. code:: shell
 
-    mkdir -p ~/mnt/ubuntu
-    sshfs ubuntu@`openstack vanilla show ip test`: ~/mnt/ubuntu
-    ls -l ~/mnt/ubuntu
-    umount ~/mnt/ubuntu
-
-You can mount ``ubuntu``'s home directory of ``test`` by sshfs, if you prefer.
-
-.. code:: shell
-
     openstack vanilla shelve test
 
 It shelves ``test`` - It's good when you will leave the project
 temporarily. The floating IP address and the security group is taken
-away. The old image used for the previous unshelve is removed.
+away. The old image used for the previous unshelve is removed. The
+``./vanilla`` folder would be unmounted.
 
 .. code:: shell
 
-    openstack vanilla unshelve test
+    openstack vanilla unshelve --login ubuntu test
 
 You can unshelve ``test`` when you restart the project. The floating IP
-address and the security group are configured again.
+address and the security group are configured again. The ``./vanilla``
+folder would be mounted again.
 
 .. code:: shell
 
@@ -88,6 +82,56 @@ You can resize ``test`` when you need more power, if the project supports it.
     openstack vanilla delete test
 
 After the project you can remove ``test`` completely.
+
+There are more subcommands and the options of each subcommand. ``--help``
+option will show them. For example,
+
+.. code:: shell
+
+    $ openstack vanilla --help
+    Command "vanilla" matches:
+      vanilla allow me
+      vanilla create
+      vanilla delete
+      vanilla deny us
+      vanilla give ip
+      vanilla mount
+      vanilla resize
+      vanilla shelve
+      vanilla show id
+      vanilla show ip
+      vanilla show my ip
+      vanilla show status
+      vanilla take ip
+      vanilla unmount
+      vanilla unshelve
+    $ openstack vanilla create --help
+    usage: openstack vanilla create [-h] [--add-port <port>] --flavor <flavor>
+    				--login <login-name> [--mount <mount-point>]
+    				--key-name <key-name> --image <image>
+    				[--volume <volume>]
+    				<server>
+
+    Create a vanilla server.
+
+    positional arguments:
+      <server>              Server (name or ID)
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --add-port <port>     Destination port (allow multiple times, default: [22])
+      --flavor <flavor>     Create with this flavor (name or ID)
+      --login <login-name>  Login name for sshfs mount (ssh -l option)
+      --mount <mount-point>
+    			Directory of the vanilla server to mount (default: ~)
+      --key-name <key-name>
+    			Keypair to inject into this server (optional
+    			extension)
+      --image <image>       Create server boot disk from this image (name or ID)
+      --volume <volume>     Volume (size in GB for new or ID to mount)
+
+    This command is provided by the python-shka-gadgets-openstackclient plugin.
+    $
 
 Copyright
 ---------
