@@ -241,12 +241,10 @@ class Mount(_Vanilla, _Mount):
 
     def take_action(self, parsed_args):
         server = parsed_args.server
-        while re.search('=', self.check_output('openstack vanilla show ip %s' % (server)).decode().strip()):
-            self.check_call('sleep 1')
-        self.check_calls([
-            'mkdir -p ./vanilla',
-            'sshfs -oStrictHostKeyChecking=accept-new %s@`openstack vanilla show ip %s`:%s ./vanilla' % (parsed_args.login, server, parsed_args.mount)
-        ])
+        login = parsed_args.login
+        while self.check_output('openstack vanilla wait sshd --login %s %s' % (login, server)).decode().strip() == 'NG':
+            self.check_call('mkdir -p ./vanilla')
+        self.check_call('sshfs %s@`openstack vanilla show ip %s`:%s ./vanilla' % (login, server, parsed_args.mount))
         return
 
 ##
@@ -383,7 +381,7 @@ class WaitSShD(_Vanilla, _Login):
 
     def take_action(self, parsed_args):
         try:
-            self.check_call("ssh %s@`openstack vanilla show ip %s` 'echo OK' 2>/dev/null" % (parsed_args.login, parsed_args.server))
+            self.check_call("ssh -oStrictHostKeyChecking=accept-new %s@`openstack vanilla show ip %s` 'echo OK' 2>/dev/null" % (parsed_args.login, parsed_args.server))
         except:
             print('NG')
         return
