@@ -51,7 +51,40 @@ class _Flavor(command.Command):
 
 ##
 
-class _Mount(command.Command):
+class _KeepImages(command.Command):
+
+    def delete_images(self, server, images):
+        while 'SHELVED_OFFLOADED' != self.check_output('openstack vanilla show status %s' % (server)).decode().strip():
+            self.check_call('sleep 1')
+        for image in images:
+            self.check_call('openstack image delete %s' % (image))
+        return
+        
+    def get_images(self, server):
+        return self.check_output('openstack image list --format value --column ID --property instance_uuid=`openstack vanilla show id %s`' % (server)).decode().strip().split()
+
+    def get_parser(self, prog_name):
+        parser = super(_KeepImages, self).get_parser(prog_name)
+        parser.add_argument(
+            '--keep-images', action='store_true',
+            help="Keep the images",
+        )
+        return parser
+
+##
+
+class _Login(command.Command):
+    def get_parser(self, prog_name):
+        parser = super(_Login, self).get_parser(prog_name)
+        parser.add_argument(
+            '--login', metavar='<login-name>', required=True,
+            help='Login name for ssh/sshfs',
+        )
+        return parser
+
+##
+
+class _Mount(_Login):
 
     def mount_argument(self, mount):
         mount = ''
@@ -170,7 +203,7 @@ class Create(_Vanilla, _Mount, _Flavor, _AddPort):
 
 ##
     
-class Delete(_Vanilla):
+class Delete(_Vanilla, _KeepImages):
     """Delete the vanilla server."""
     
     def get_parser(self, prog_name):
@@ -184,6 +217,7 @@ class Delete(_Vanilla):
     def take_action(self, parsed_args):
         server = parsed_args.server
         volumes = parsed_args.delete_volumes
+        images = self.get_images(server)
         server_id = False
         self.check_call('openstack vanilla unmount %s' % (server))
         if volumes:
@@ -197,6 +231,8 @@ class Delete(_Vanilla):
         if volumes:
             for volume in re.findall("'([^']+)'", volumes):
                 self.check_call('openstack volume delete %s' % (volume))
+        if not parsed_args.keep_images:
+            self.delete_images(server, images)
         return
 
 ##
@@ -244,31 +280,26 @@ class Mount(_Vanilla, _Mount):
 
 ##
 
-class Resize(_Vanilla, _Flavor):
+class Resize(_Vanilla, _Mount, _Flavor):
     """Resize the vanilla server."""
 
     def take_action(self, parsed_args):
         server = parsed_args.server
         self.check_call('openstack server resize --flavor %s --wait %s' % (parsed_args.flavor, server), '> /dev/null')
-        self.check_call('openstack server resize confirm %s' % (server))
+        self.check_calls([
+            'openstack server resize confirm %s' % (server),
+            'openstack vanilla mount --login %s %s %s' % (parsed_args.login, self.mount_argument(parsed_args.mount), server)
+        ])
         return
 
 ##
 
-class Shelve(_Vanilla):
+class Shelve(_Vanilla, _KeepImages):
     """Shelve the vanilla server."""
-
-    def get_parser(self, prog_name):
-        parser = super(Shelve, self).get_parser(prog_name)
-        parser.add_argument(
-            '--keep-images', action='store_true',
-            help="Keep the image after unshelve",
-        )
-        return parser
 
     def take_action(self, parsed_args):
         server = parsed_args.server
-        images =  self.check_output('openstack image list --format value --column ID --property instance_uuid=`openstack vanilla show id %s`' % (server)).decode().strip().split()
+        images = self.get_images(server)
         self.check_call('openstack vanilla unmount %s' % (server))
         self.check_call('ssh-keygen -R `openstack vanilla show ip %s`' % (server), '> /dev/null 2>&1')
         self.check_calls([
@@ -277,10 +308,7 @@ class Shelve(_Vanilla):
             'openstack server shelve %s' % (server)
         ])
         if not parsed_args.keep_images:
-            while 'SHELVED_OFFLOADED' != self.check_output('openstack vanilla show status %s' % (server)).decode().strip():
-                self.check_call('sleep 4')
-            for image in images:
-                self.check_call('openstack image delete %s' % (image))
+            self.delete_images(server, images)
         return
 
 ##
