@@ -73,9 +73,9 @@ folder would be mounted again.
 
 .. code:: shell
 
-    openstack vanilla resize --flavor standard.xxlarge test
+    openstack vanilla resize --flavor standard.xxlarge --login ubuntu test
 
-You can resize ``test`` when you need more power, if the project supports it.
+You can resize ``test`` when you need more power, if the project supports it. The ``./vanilla`` folder would be mounted again.
 
 .. code:: shell
 
