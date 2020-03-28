@@ -61,7 +61,6 @@ setup(
             # 'vanilla_test=python_shka_gadgets_openstackclient.v1.vanilla:Test',
             'vanilla_unmount=python_shka_gadgets_openstackclient.v1.vanilla:Unmount',
             'vanilla_unshelve=python_shka_gadgets_openstackclient.v1.vanilla:Unshelve',
-            'vanilla_wait_sshd=python_shka_gadgets_openstackclient.v1.vanilla:WaitSShD',
         ],
     },
 )
