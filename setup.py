@@ -22,7 +22,7 @@ except IOError:
 
 setup(
     name='python-shka-gadgets-openstackclient',
-    version='0.5.0',
+    version='0.5.1',
     url='https://github.com/shka/python-shka-gadgets-openstackclient',
     author='Shintaro Katayama',
     author_email='shintaro.katayama@gmail.com',
