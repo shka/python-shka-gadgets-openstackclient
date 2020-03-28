@@ -249,13 +249,16 @@ class Mount(_Vanilla, _Mount):
 
 ##
 
-class Resize(_Vanilla, _Flavor):
+class Resize(_Vanilla, _Mount, _Flavor):
     """Resize the vanilla server."""
 
     def take_action(self, parsed_args):
         server = parsed_args.server
         self.check_call('openstack server resize --flavor %s --wait %s' % (parsed_args.flavor, server), '> /dev/null')
-        self.check_call('openstack server resize confirm %s' % (server))
+        self.check_calls([
+            'openstack server resize confirm %s' % (server),
+            'openstack vanilla mount --login %s %s %s' % (parsed_args.login, self.mount_argument(parsed_args.mount), server)
+        ])
         return
 
 ##
