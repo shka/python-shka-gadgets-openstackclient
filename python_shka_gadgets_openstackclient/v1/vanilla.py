@@ -338,7 +338,10 @@ class ShowStatus(_Vanilla):
     """Show the status of the vanilla server."""
 
     def take_action(self, parsed_args):
-        self.check_call('openstack server show --format value --column status %s' % (parsed_args.server))
+        try:
+            self.check_call('openstack server show --format value --column status %s 2> /dev/null' % (parsed_args.server))
+        except:
+            print('NOT_EXIST')
         return
 
 ##
