@@ -54,8 +54,10 @@ class _Flavor(command.Command):
 class _KeepImages(command.Command):
 
     def delete_images(self, server, images):
-        while 'SHELVED_OFFLOADED' != self.check_output('openstack vanilla show status %s' % (server)).decode().strip():
+        msg = ''
+        while 'SHELVED_OFFLOADED' != msg and 'NOT_EXIST' != msg:
             self.check_call('sleep 1')
+            msg = self.check_output('openstack vanilla show status %s' % (server)).decode().strip()
         for image in images:
             self.check_call('openstack image delete %s' % (image))
         return
